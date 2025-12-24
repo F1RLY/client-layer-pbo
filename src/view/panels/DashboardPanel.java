@@ -25,24 +25,22 @@ public class DashboardPanel extends JPanel {
         lblWelcome.setFont(new Font("Arial", Font.BOLD, 24));
         lblWelcome.setForeground(new Color(60, 60, 60));
         
+        // TOMBOL REFRESH - BIARKAN DEFAULT, JANGAN SET BACKGROUND/FOREGROUND
         JButton btnRefresh = new JButton("Refresh Data");
-        btnRefresh.setBackground(new Color(41, 128, 185));
-        btnRefresh.setForeground(Color.WHITE);
-        btnRefresh.setFont(new Font("Arial", Font.BOLD, 14));
-        btnRefresh.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        btnRefresh.setFont(new Font("Arial", Font.PLAIN, 14));
         
         headerPanel.add(lblWelcome, BorderLayout.WEST);
         headerPanel.add(btnRefresh, BorderLayout.EAST);
         
-        // Stats Cards - PAKAI TEXT ICON
+        // Stats Cards
         JPanel statsPanel = new JPanel(new GridLayout(1, 4, 15, 0));
         statsPanel.setOpaque(false);
         statsPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 30, 0));
         
-        statsPanel.add(createCard("DOKTER", "12", new Color(41, 128, 185), "D"));
-        statsPanel.add(createCard("PASIEN", "156", new Color(39, 174, 96), "P"));
-        statsPanel.add(createCard("KONSULTASI", "8", new Color(231, 76, 60), "K"));
-        statsPanel.add(createCard("PENDAPATAN", "Rp 12,5jt", new Color(243, 156, 18), "Rp"));
+        statsPanel.add(createCard("DOKTER", "12", new Color(41, 128, 185)));
+        statsPanel.add(createCard("PASIEN", "156", new Color(39, 174, 96)));
+        statsPanel.add(createCard("KONSULTASI", "8", new Color(231, 76, 60)));
+        statsPanel.add(createCard("PENDAPATAN", "Rp 12,5jt", new Color(243, 156, 18)));
         
         // Activity Panel
         JPanel activityPanel = createActivityPanel();
@@ -53,7 +51,7 @@ public class DashboardPanel extends JPanel {
         add(activityPanel, BorderLayout.SOUTH);
     }
     
-    private JPanel createCard(String title, String value, Color color, String iconText) {
+    private JPanel createCard(String title, String value, Color color) {
         JPanel card = new JPanel(new BorderLayout(10, 10));
         card.setBackground(Color.WHITE);
         card.setBorder(BorderFactory.createCompoundBorder(
@@ -61,36 +59,35 @@ public class DashboardPanel extends JPanel {
             BorderFactory.createEmptyBorder(20, 20, 20, 20)
         ));
         
-        // Icon Panel (lingkaran dengan teks)
-        JPanel iconPanel = new JPanel();
-        iconPanel.setPreferredSize(new Dimension(50, 50));
-        iconPanel.setBackground(color);
-        iconPanel.setLayout(new GridBagLayout());
-        iconPanel.setBorder(BorderFactory.createLineBorder(color.darker(), 2));
+        // Title dengan icon teks dalam []
+        String iconText = "";
+        switch(title) {
+            case "DOKTER": iconText = "[D]"; break;
+            case "PASIEN": iconText = "[P]"; break;
+            case "KONSULTASI": iconText = "[K]"; break;
+            case "PENDAPATAN": iconText = "[$]"; break;
+        }
         
-        JLabel iconLabel = new JLabel(iconText);
-        iconLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        iconLabel.setForeground(Color.WHITE);
-        iconPanel.add(iconLabel);
-        
-        // Title
-        JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 14));
-        titleLabel.setForeground(new Color(100, 100, 100));
+        JLabel titleLabel = new JLabel(iconText + " " + title);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        titleLabel.setForeground(color);
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         
         // Value
         JLabel valueLabel = new JLabel(value);
         valueLabel.setFont(new Font("Arial", Font.BOLD, 28));
         valueLabel.setForeground(new Color(60, 60, 60));
+        valueLabel.setHorizontalAlignment(SwingConstants.CENTER);
         
-        // Layout
-        JPanel topPanel = new JPanel(new BorderLayout(10, 0));
-        topPanel.setBackground(Color.WHITE);
-        topPanel.add(iconPanel, BorderLayout.WEST);
-        topPanel.add(titleLabel, BorderLayout.CENTER);
+        // Footer
+        JLabel footerLabel = new JLabel("↑ 12% dari bulan lalu");
+        footerLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+        footerLabel.setForeground(Color.GRAY);
+        footerLabel.setHorizontalAlignment(SwingConstants.CENTER);
         
-        card.add(topPanel, BorderLayout.NORTH);
+        card.add(titleLabel, BorderLayout.NORTH);
         card.add(valueLabel, BorderLayout.CENTER);
+        card.add(footerLabel, BorderLayout.SOUTH);
         
         return card;
     }
@@ -118,57 +115,47 @@ public class DashboardPanel extends JPanel {
         table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 13));
         table.getTableHeader().setBackground(new Color(245, 245, 245));
         
-        // Center align untuk kolom tertentu
-        table.getColumnModel().getColumn(0).setCellRenderer(new CenterCellRenderer());
-        table.getColumnModel().getColumn(3).setCellRenderer(new StatusCellRenderer());
+        // Simple center alignment tanpa custom renderer
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        table.getColumnModel().getColumn(0).setCellRenderer(centerRenderer); // WAKTU
+        table.getColumnModel().getColumn(3).setCellRenderer(centerRenderer); // STATUS
+        
+        // Simple status coloring
+        DefaultTableCellRenderer statusRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                    boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                c.setFont(new Font("Arial", Font.BOLD, 12));
+                
+                String status = value.toString();
+                if (status.equals("Selesai") || status.equals("Lunas")) {
+                    c.setBackground(new Color(220, 255, 220));
+                    c.setForeground(new Color(0, 100, 0));
+                } else if (status.equals("Berlangsung")) {
+                    c.setBackground(new Color(255, 255, 200));
+                    c.setForeground(new Color(153, 102, 0));
+                } else {
+                    c.setBackground(Color.WHITE);
+                    c.setForeground(Color.BLACK);
+                }
+                
+                if (isSelected) {
+                    c.setBackground(table.getSelectionBackground());
+                    c.setForeground(table.getSelectionForeground());
+                }
+                
+                ((JLabel) c).setHorizontalAlignment(SwingConstants.CENTER);
+                return c;
+            }
+        };
+        
+        table.getColumnModel().getColumn(3).setCellRenderer(statusRenderer);
         
         JScrollPane scrollPane = new JScrollPane(table);
         panel.add(scrollPane, BorderLayout.CENTER);
         
         return panel;
     }
-    
-    // Custom cell renderer untuk center align
-    class CenterCellRenderer extends DefaultTableCellRenderer {
-        public CenterCellRenderer() {
-            setHorizontalAlignment(SwingConstants.CENTER);
-        }
-    }
-    
-    // Custom cell renderer untuk status
-    class StatusCellRenderer extends DefaultTableCellRenderer {
-        public StatusCellRenderer() {
-            setHorizontalAlignment(SwingConstants.CENTER);
-            setOpaque(true);
-        }
-        
-        @Override
-        public Component getTableCellRendererComponent(JTable table, Object value,
-                boolean isSelected, boolean hasFocus, int row, int column) {
-            super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-            
-            String status = value.toString();
-            if (status.equals("Selesai") || status.equals("Lunas")) {
-                setBackground(new Color(220, 255, 220)); // Hijau muda
-                setForeground(new Color(0, 100, 0));
-            } else if (status.equals("Berlangsung")) {
-                setBackground(new Color(255, 255, 200)); // Kuning muda
-                setForeground(new Color(153, 102, 0));
-            } else {
-                setBackground(Color.WHITE);
-                setForeground(Color.BLACK);
-            }
-            
-            if (isSelected) {
-                setBackground(table.getSelectionBackground());
-                setForeground(table.getSelectionForeground());
-            }
-            
-            return this;
-        }
-    }
-
-    
-
-    
 }

@@ -1,11 +1,18 @@
 package view.panels;
 
+import controller.DokterController;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 
 public class DokterPanel extends JPanel {
     private Color backgroundColor;
+    
+    // Components
+    private JTable table;
+    private DefaultTableModel tableModel;
+    private JTextField txtNama, txtSpesialis, txtNoTelp, txtAlamat;
+    private JButton btnTambah, btnUpdate, btnHapus, btnClear;
     
     public DokterPanel(Color bgColor) {
         this.backgroundColor = bgColor;
@@ -18,7 +25,7 @@ public class DokterPanel extends JPanel {
         setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         
         // Title
-        JLabel titleLabel = new JLabel("👨‍⚕️ MANAJEMEN DATA DOKTER");
+        JLabel titleLabel = new JLabel("MANAJEMEN DATA DOKTER");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
         titleLabel.setForeground(new Color(52, 73, 94));
         titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
@@ -29,24 +36,10 @@ public class DokterPanel extends JPanel {
         splitPane.setDividerSize(3);
         
         // Left: Form
-        JPanel formPanel = new JPanel(new BorderLayout());
-        formPanel.setBackground(Color.WHITE);
-        formPanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(200, 200, 200)),
-            BorderFactory.createEmptyBorder(15, 15, 15, 15)
-        ));
-        
-        formPanel.add(createForm(), BorderLayout.CENTER);
+        JPanel formPanel = createFormPanel();
         
         // Right: Table
-        JPanel tablePanel = new JPanel(new BorderLayout());
-        tablePanel.setBackground(Color.WHITE);
-        tablePanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(200, 200, 200)),
-            BorderFactory.createEmptyBorder(15, 15, 15, 15)
-        ));
-        
-        tablePanel.add(createTable(), BorderLayout.CENTER);
+        JPanel tablePanel = createTablePanel();
         
         splitPane.setLeftComponent(formPanel);
         splitPane.setRightComponent(tablePanel);
@@ -55,52 +48,78 @@ public class DokterPanel extends JPanel {
         add(splitPane, BorderLayout.CENTER);
     }
     
-    private JPanel createForm() {
+    private JPanel createFormPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(Color.WHITE);
+        panel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)),
+            BorderFactory.createEmptyBorder(15, 15, 15, 15)
+        ));
         
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 8, 8, 8);
         gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.WEST;
         
         // Labels
         String[] labels = {"Nama Dokter:", "Spesialis:", "No. Telepon:", "Alamat:"};
-        JTextField[] fields = new JTextField[4];
         
         for (int i = 0; i < labels.length; i++) {
             gbc.gridx = 0;
             gbc.gridy = i;
-            gbc.anchor = GridBagConstraints.WEST;
             JLabel label = new JLabel(labels[i]);
             label.setFont(new Font("Arial", Font.BOLD, 12));
             panel.add(label, gbc);
             
             gbc.gridx = 1;
-            fields[i] = new JTextField(15);
-            fields[i].setPreferredSize(new Dimension(200, 30));
-            panel.add(fields[i], gbc);
+            JTextField field = new JTextField(15);
+            field.setPreferredSize(new Dimension(200, 30));
+            panel.add(field, gbc);
+            
+            // Assign to variables
+            switch (i) {
+                case 0: txtNama = field; break;
+                case 1: txtSpesialis = field; break;
+                case 2: txtNoTelp = field; break;
+                case 3: txtAlamat = field; break;
+            }
         }
         
-        // Buttons
+        // Buttons - BIARKAN DEFAULT STYLE
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         buttonPanel.setBackground(Color.WHITE);
         
-        String[] buttonNames = {"➕ Tambah", "✏️ Update", "🗑️ Hapus", "🔄 Reset"};
-        Color[] buttonColors = {
-            new Color(39, 174, 96),
-            new Color(41, 128, 185),
-            new Color(231, 76, 60),
-            new Color(149, 165, 166)
-        };
+        btnTambah = new JButton("Tambah");
+        btnUpdate = new JButton("Update");
+        btnHapus = new JButton("Hapus");
+        btnClear = new JButton("Clear");
         
-        for (int i = 0; i < buttonNames.length; i++) {
-            JButton btn = new JButton(buttonNames[i]);
-            btn.setBackground(buttonColors[i]);
-            btn.setForeground(Color.WHITE);
-            btn.setFont(new Font("Arial", Font.BOLD, 12));
-            btn.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
-            buttonPanel.add(btn);
-        }
+        // HAPUS SEMUA SET BACKGROUND/FOREGROUND/BORDER CUSTOM
+        // HAPUS: btnTambah.setBackground(new Color(39, 174, 96));
+        // HAPUS: btnTambah.setForeground(Color.WHITE);
+        btnTambah.setFont(new Font("Arial", Font.PLAIN, 12));
+        
+        // HAPUS: btnUpdate.setBackground(new Color(41, 128, 185));
+        // HAPUS: btnUpdate.setForeground(Color.WHITE);
+        btnUpdate.setFont(new Font("Arial", Font.PLAIN, 12));
+        
+        // HAPUS: btnHapus.setBackground(new Color(231, 76, 60));
+        // HAPUS: btnHapus.setForeground(Color.WHITE);
+        btnHapus.setFont(new Font("Arial", Font.PLAIN, 12));
+        
+        // HAPUS: btnClear.setBackground(new Color(149, 165, 166));
+        // HAPUS: btnClear.setForeground(Color.WHITE);
+        btnClear.setFont(new Font("Arial", Font.PLAIN, 12));
+        
+        // HAPUS: btnTambah.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+        // HAPUS: btnUpdate.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+        // HAPUS: btnHapus.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+        // HAPUS: btnClear.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+        
+        buttonPanel.add(btnTambah);
+        buttonPanel.add(btnUpdate);
+        buttonPanel.add(btnHapus);
+        buttonPanel.add(btnClear);
         
         gbc.gridx = 0;
         gbc.gridy = labels.length;
@@ -111,27 +130,60 @@ public class DokterPanel extends JPanel {
         return panel;
     }
     
-    private JScrollPane createTable() {
-        String[] columns = {"ID", "NAMA", "SPESIALIS", "TELEPON", "ALAMAT"};
-        Object[][] data = {
-            {1, "Dr. Andi Wijaya", "Umum", "08123456789", "Jl. Merdeka No.1"},
-            {2, "Dr. Siti Rahayu", "Anak", "08234567890", "Jl. Sudirman No.45"},
-            {3, "Dr. Budi Santoso", "Bedah", "08345678901", "Jl. Gatot Subroto No.12"}
-        };
+    private JPanel createTablePanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(Color.WHITE);
+        panel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)),
+            BorderFactory.createEmptyBorder(15, 15, 15, 15)
+        ));
         
-        DefaultTableModel model = new DefaultTableModel(data, columns) {
+        // Table
+        String[] columns = {"ID", "NAMA", "SPESIALIS", "TELEPON", "ALAMAT"};
+        tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
         
-        JTable table = new JTable(model);
+        table = new JTable(tableModel);
         table.setRowHeight(30);
         table.setFont(new Font("Arial", Font.PLAIN, 12));
         table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 13));
         table.getTableHeader().setBackground(new Color(245, 245, 245));
         
-        return new JScrollPane(table);
+        JScrollPane scrollPane = new JScrollPane(table);
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        return panel;
+    }
+    
+    // ========== GETTER METHODS untuk Controller ==========
+    
+    public JTextField getTxtNama() { return txtNama; }
+    public JTextField getTxtSpesialis() { return txtSpesialis; }
+    public JTextField getTxtNoTelp() { return txtNoTelp; }
+    public JTextField getTxtAlamat() { return txtAlamat; }
+    
+    public JButton getBtnTambah() { return btnTambah; }
+    public JButton getBtnUpdate() { return btnUpdate; }
+    public JButton getBtnHapus() { return btnHapus; }
+    public JButton getBtnClear() { return btnClear; }
+    
+    public JTable getTable() { return table; }
+    public DefaultTableModel getTableModel() { return tableModel; }
+    
+    // Method untuk set controller
+    public void setController(DokterController controller) {
+        // Attach table selection listener
+        table.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                int selectedRow = table.getSelectedRow();
+                if (selectedRow >= 0) {
+                    controller.loadSelectedDokterToForm(selectedRow);
+                }
+            }
+        });
     }
 }
