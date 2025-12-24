@@ -1,25 +1,27 @@
 package model;
 
+import java.util.Date;
+
 public class Pasien {
     private int id;
     private String nama;
-    private String nik;
-    private String noTelepon;
+    private String noKtp;
     private String alamat;
-    private int nomorAntrean;
-    private String status;
-    private String tanggalDaftar;
-    private String namaDokter;
+    private String noTelp;
+    private Date tanggalLahir;
+    private String jenisKelamin;
     
     // Constructor
     public Pasien() {}
     
-    public Pasien(String nama, String nik, String noTelepon, String alamat) {
+    public Pasien(String nama, String noKtp, String alamat, String noTelp, 
+                  Date tanggalLahir, String jenisKelamin) {
         this.nama = nama;
-        this.nik = nik;
-        this.noTelepon = noTelepon;
+        this.noKtp = noKtp;
         this.alamat = alamat;
-        this.status = "MENUNGGU";
+        this.noTelp = noTelp;
+        this.tanggalLahir = tanggalLahir;
+        this.jenisKelamin = jenisKelamin;
     }
     
     // Getters & Setters
@@ -29,29 +31,18 @@ public class Pasien {
     public String getNama() { return nama; }
     public void setNama(String nama) { this.nama = nama; }
     
-    public String getNik() { return nik; }
-    public void setNik(String nik) { this.nik = nik; }
-    
-    public String getNoTelepon() { return noTelepon; }
-    public void setNoTelepon(String noTelepon) { this.noTelepon = noTelepon; }
+    public String getNoKtp() { return noKtp; }
+    public void setNoKtp(String noKtp) { this.noKtp = noKtp; }
     
     public String getAlamat() { return alamat; }
     public void setAlamat(String alamat) { this.alamat = alamat; }
     
-    public int getNomorAntrean() { return nomorAntrean; }
-    public void setNomorAntrean(int nomorAntrean) { this.nomorAntrean = nomorAntrean; }
+    public String getNoTelp() { return noTelp; }
+    public void setNoTelp(String noTelp) { this.noTelp = noTelp; }
     
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public Date getTanggalLahir() { return tanggalLahir; }
+    public void setTanggalLahir(Date tanggalLahir) { this.tanggalLahir = tanggalLahir; }
     
-    public String getTanggalDaftar() { return tanggalDaftar; }
-    public void setTanggalDaftar(String tanggalDaftar) { this.tanggalDaftar = tanggalDaftar; }
-    
-    public String getNamaDokter() { return namaDokter; }
-    public void setNamaDokter(String namaDokter) { this.namaDokter = namaDokter; }
-    
-    @Override
-    public String toString() {
-        return nama + " (No: " + nomorAntrean + ")";
-    }
+    public String getJenisKelamin() { return jenisKelamin; }
+    public void setJenisKelamin(String jenisKelamin) { this.jenisKelamin = jenisKelamin; }
 }
