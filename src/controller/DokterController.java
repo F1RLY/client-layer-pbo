@@ -1,4 +1,6 @@
 // File: controller/DokterController.java
+// REPLACE ENTIRE FILE dengan ini:
+
 package controller;
 
 import model.Dokter;
@@ -6,119 +8,152 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Controller untuk manajemen dokter
- */
 public class DokterController extends BaseController<Dokter> {
-    private List<Dokter> dokterList = new ArrayList<>();
-    private Integer lastId = 0;
+    private static List<Dokter> dokterList = new ArrayList<>(); // BUAT STATIC
+    private static Integer lastId = 4; // SET AWAL 4 (karena ada 4 data dummy)
+    private static boolean dataInitialized = false;
     
     // Constructor
     public DokterController() {
-        initializeDummyData();
+        // NO initialization in constructor
     }
     
-    private void initializeDummyData() {
-        // Data dummy dokter
-        create(new Dokter("D001", "Dr. Budi Santoso", "Umum"));
-        create(new Dokter("D002", "Dr. Siti Rahayu", "Anak"));
-        create(new Dokter("D003", "Dr. Ahmad Hidayat", "Bedah"));
-        create(new Dokter("D004", "Dr. Maya Sari", "Kandungan"));
+    // Inisialisasi data dummy
+    private synchronized void initializeDummyData() {
+        if (!dataInitialized) {
+            try {
+                System.out.println("[INIT] Initializing dummy dokter data...");
+                
+                // Clear list first
+                dokterList.clear();
+                lastId = 0;
+                
+                // Add dummy data dengan cara langsung (tanpa panggil create)
+                addDokterDirectly("D001", "Dr. Budi Santoso", "Umum");
+                addDokterDirectly("D002", "Dr. Siti Rahayu", "Anak");
+                addDokterDirectly("D003", "Dr. Ahmad Hidayat", "Bedah");
+                addDokterDirectly("D004", "Dr. Maya Sari", "Kandungan");
+                
+                dataInitialized = true;
+                System.out.println("[INIT] Dummy data initialized. Total: " + dokterList.size());
+                
+            } catch (Exception e) {
+                System.err.println("[ERROR] Failed to init dummy data: " + e.getMessage());
+            }
+        }
+    }
+    
+    private void addDokterDirectly(String kode, String nama, String spesialisasi) {
+        Dokter dokter = new Dokter();
+        dokter.setId(++lastId);
+        dokter.setKodeDokter(kode);
+        dokter.setNama(nama);
+        dokter.setSpesialisasi(spesialisasi);
+        dokter.setStatus("AKTIF");
+        dokterList.add(dokter);
+        System.out.println("[INIT] Added: " + kode + " - " + nama + " (ID: " + dokter.getId() + ")");
     }
     
     @Override
     public boolean create(Dokter dokter) {
+        System.out.println("\n[CREATE] Attempting to create dokter: " + 
+                         dokter.getKodeDokter() + " - " + dokter.getNama());
+        
         try {
+            // Step 1: Validasi
             if (!validate(dokter)) {
+                System.out.println("[CREATE] Validation failed");
                 return false;
             }
             
-            // Cek kode dokter unik
-            if (dokterList.stream().anyMatch(d -> d.getKodeDokter().equals(dokter.getKodeDokter()))) {
-                throw new IllegalArgumentException("Kode dokter sudah digunakan");
+            // Step 2: Cek kode unik (case insensitive)
+            String kodeInput = dokter.getKodeDokter().toUpperCase().trim();
+            for (Dokter d : dokterList) {
+                if (d.getKodeDokter().equalsIgnoreCase(kodeInput)) {
+                    System.out.println("[CREATE] Kode already exists: " + kodeInput);
+                    throw new IllegalArgumentException("Kode dokter sudah digunakan: " + kodeInput);
+                }
             }
             
-            dokter.setId(++lastId);
+            // Step 3: Set ID dan simpan
+            lastId++;
+            dokter.setId(lastId);
+            dokter.setKodeDokter(kodeInput); // Normalize to uppercase
+            
+            // Ensure status is set
+            if (dokter.getStatus() == null) {
+                dokter.setStatus("AKTIF");
+            }
+            
+            // Add to list
             dokterList.add(dokter);
             
-            System.out.println("Dokter berhasil ditambahkan: " + dokter.getNama());
+            // DEBUG: Print current list
+            System.out.println("[CREATE] Success! ID: " + lastId);
+            System.out.println("[CREATE] Current list size: " + dokterList.size());
+            System.out.println("[CREATE] All dokters:");
+            for (Dokter d : dokterList) {
+                System.out.println("  - " + d.getId() + " | " + d.getKodeDokter() + " | " + d.getNama());
+            }
+            
             return true;
             
         } catch (IllegalArgumentException e) {
-            System.err.println("Create gagal: " + e.getMessage());
+            System.err.println("[CREATE] Error: " + e.getMessage());
             return false;
         } catch (Exception e) {
-            handleException(e, "create dokter");
+            System.err.println("[CREATE] Unexpected error: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
     
     @Override
     public Dokter read(Integer id) {
-        try {
-            if (id == null) {
-                throw new IllegalArgumentException("ID tidak boleh null");
+        if (id == null) return null;
+        
+        for (Dokter dokter : dokterList) {
+            if (id.equals(dokter.getId())) {
+                return dokter;
             }
-            
-            return dokterList.stream()
-                    .filter(d -> d.getId().equals(id))
-                    .findFirst()
-                    .orElse(null);
-            
-        } catch (Exception e) {
-            handleException(e, "read dokter");
-            return null;
         }
+        return null;
     }
     
-    /**
-     * Cari dokter berdasarkan kode dokter
-     */
     public Dokter readByKode(String kodeDokter) {
-        try {
-            if (kodeDokter == null || kodeDokter.trim().isEmpty()) {
-                return null;
+        if (kodeDokter == null) return null;
+        
+        String kode = kodeDokter.toUpperCase().trim();
+        for (Dokter dokter : dokterList) {
+            if (dokter.getKodeDokter().equalsIgnoreCase(kode)) {
+                return dokter;
             }
-            
-            return dokterList.stream()
-                    .filter(d -> kodeDokter.equals(d.getKodeDokter()))
-                    .findFirst()
-                    .orElse(null);
-            
-        } catch (Exception e) {
-            handleException(e, "read dokter by kode");
-            return null;
         }
+        return null;
     }
     
     @Override
     public List<Dokter> readAll() {
-        return new ArrayList<>(dokterList);
-    }
-    
-    /**
-     * Cari dokter berdasarkan spesialisasi
-     */
-    public List<Dokter> searchBySpesialisasi(String spesialisasi) {
-        try {
-            if (spesialisasi == null || spesialisasi.trim().isEmpty()) {
-                return readAll();
-            }
-            
-            String searchTerm = spesialisasi.toLowerCase().trim();
-            return dokterList.stream()
-                    .filter(d -> d.getSpesialisasi().toLowerCase().contains(searchTerm))
-                    .collect(Collectors.toList());
-            
-        } catch (Exception e) {
-            handleException(e, "search dokter by spesialisasi");
-            return new ArrayList<>();
+        // LAZY INIT: Initialize dummy data if empty
+        if (dokterList.isEmpty()) {
+            initializeDummyData();
         }
+        
+        System.out.println("[READ ALL] Returning " + dokterList.size() + " dokters");
+        return new ArrayList<>(dokterList); // Return copy
     }
     
-    /**
-     * Cari dokter aktif
-     */
+    public List<Dokter> searchBySpesialisasi(String spesialisasi) {
+        if (spesialisasi == null || spesialisasi.trim().isEmpty()) {
+            return readAll();
+        }
+        
+        String searchTerm = spesialisasi.toLowerCase().trim();
+        return dokterList.stream()
+                .filter(d -> d.getSpesialisasi().toLowerCase().contains(searchTerm))
+                .collect(Collectors.toList());
+    }
+    
     public List<Dokter> getAktifDokter() {
         return dokterList.stream()
                 .filter(d -> "AKTIF".equals(d.getStatus()))
@@ -127,6 +162,8 @@ public class DokterController extends BaseController<Dokter> {
     
     @Override
     public boolean update(Dokter dokter) {
+        System.out.println("\n[UPDATE] Updating dokter ID: " + dokter.getId());
+        
         try {
             if (dokter == null || dokter.getId() == null) {
                 throw new IllegalArgumentException("Dokter atau ID tidak valid");
@@ -136,61 +173,80 @@ public class DokterController extends BaseController<Dokter> {
                 return false;
             }
             
-            Dokter existing = read(dokter.getId());
+            // Find existing dokter
+            Dokter existing = null;
+            for (Dokter d : dokterList) {
+                if (d.getId().equals(dokter.getId())) {
+                    existing = d;
+                    break;
+                }
+            }
+            
             if (existing == null) {
                 throw new IllegalArgumentException("Dokter tidak ditemukan");
             }
             
-            // Cek kode dokter unik (kecuali untuk dirinya sendiri)
-            if (dokterList.stream()
-                .anyMatch(d -> d.getKodeDokter().equals(dokter.getKodeDokter()) 
-                            && !d.getId().equals(dokter.getId()))) {
-                throw new IllegalArgumentException("Kode dokter sudah digunakan oleh dokter lain");
+            // Cek kode unik (selain diri sendiri)
+            String kodeInput = dokter.getKodeDokter().toUpperCase().trim();
+            for (Dokter d : dokterList) {
+                if (d.getKodeDokter().equalsIgnoreCase(kodeInput) && 
+                    !d.getId().equals(dokter.getId())) {
+                    throw new IllegalArgumentException("Kode sudah digunakan: " + kodeInput);
+                }
             }
             
             // Update data
-            existing.setKodeDokter(dokter.getKodeDokter());
+            existing.setKodeDokter(kodeInput);
             existing.setNama(dokter.getNama());
             existing.setSpesialisasi(dokter.getSpesialisasi());
             existing.setNoTelepon(dokter.getNoTelepon());
             existing.setEmail(dokter.getEmail());
             existing.setStatus(dokter.getStatus());
             
-            System.out.println("Dokter berhasil diupdate: " + dokter.getNama());
+            System.out.println("[UPDATE] Success!");
             return true;
             
         } catch (IllegalArgumentException e) {
-            System.err.println("Update gagal: " + e.getMessage());
+            System.err.println("[UPDATE] Error: " + e.getMessage());
             return false;
         } catch (Exception e) {
-            handleException(e, "update dokter");
+            System.err.println("[UPDATE] Unexpected error: " + e.getMessage());
             return false;
         }
     }
     
     @Override
     public boolean delete(Integer id) {
+        System.out.println("\n[DELETE] Deleting dokter ID: " + id);
+        
         try {
             if (id == null) {
                 throw new IllegalArgumentException("ID tidak boleh null");
             }
             
-            Dokter dokter = read(id);
-            if (dokter == null) {
+            // Find and remove
+            boolean removed = false;
+            for (int i = 0; i < dokterList.size(); i++) {
+                if (dokterList.get(i).getId().equals(id)) {
+                    Dokter removedDokter = dokterList.remove(i);
+                    System.out.println("[DELETE] Removed: " + removedDokter.getKodeDokter() + " - " + removedDokter.getNama());
+                    removed = true;
+                    break;
+                }
+            }
+            
+            if (!removed) {
                 throw new IllegalArgumentException("Dokter tidak ditemukan");
             }
             
-            // Soft delete: ubah status menjadi NONAKTIF
-            dokter.setStatus("NONAKTIF");
-            
-            System.out.println("Status dokter diubah menjadi NONAKTIF: " + dokter.getNama());
+            System.out.println("[DELETE] Success! Current size: " + dokterList.size());
             return true;
             
         } catch (IllegalArgumentException e) {
-            System.err.println("Delete gagal: " + e.getMessage());
+            System.err.println("[DELETE] Error: " + e.getMessage());
             return false;
         } catch (Exception e) {
-            handleException(e, "delete dokter");
+            System.err.println("[DELETE] Unexpected error: " + e.getMessage());
             return false;
         }
     }
@@ -198,30 +254,32 @@ public class DokterController extends BaseController<Dokter> {
     @Override
     protected boolean validate(Dokter dokter) {
         try {
-            // Validasi kode dokter
+            // Kode dokter
             if (dokter.getKodeDokter() == null || dokter.getKodeDokter().trim().isEmpty()) {
                 throw new IllegalArgumentException("Kode dokter tidak boleh kosong");
             }
             
-            if (!dokter.getKodeDokter().matches("[A-Z]\\d{3}")) {
-                throw new IllegalArgumentException("Kode dokter harus huruf diikuti 3 angka (contoh: D001)");
+            String kode = dokter.getKodeDokter().trim();
+            if (!kode.matches("[A-Za-z]\\d{3}")) {
+                throw new IllegalArgumentException("Format: Huruf + 3 angka (contoh: D001)");
             }
             
-            // Validasi nama
+            // Nama
             if (dokter.getNama() == null || dokter.getNama().trim().isEmpty()) {
-                throw new IllegalArgumentException("Nama dokter tidak boleh kosong");
+                throw new IllegalArgumentException("Nama tidak boleh kosong");
             }
             
-            if (!dokter.getNama().trim().startsWith("Dr. ")) {
-                throw new IllegalArgumentException("Nama dokter harus diawali dengan 'Dr. '");
+            String nama = dokter.getNama().trim();
+            if (!nama.startsWith("Dr. ") && !nama.startsWith("dr. ")) {
+                dokter.setNama("Dr. " + nama);
             }
             
-            // Validasi spesialisasi
+            // Spesialisasi
             if (dokter.getSpesialisasi() == null || dokter.getSpesialisasi().trim().isEmpty()) {
                 throw new IllegalArgumentException("Spesialisasi tidak boleh kosong");
             }
             
-            // Validasi status
+            // Status (default AKTIF)
             if (dokter.getStatus() == null) {
                 dokter.setStatus("AKTIF");
             } else if (!dokter.getStatus().equals("AKTIF") && !dokter.getStatus().equals("NONAKTIF")) {
@@ -231,8 +289,24 @@ public class DokterController extends BaseController<Dokter> {
             return true;
             
         } catch (IllegalArgumentException e) {
-            System.err.println("Validasi gagal: " + e.getMessage());
+            System.err.println("[VALIDATE] Error: " + e.getMessage());
             return false;
         }
+    }
+    
+    // Method untuk testing/reset
+    public void resetData() {
+        dokterList.clear();
+        lastId = 0;
+        dataInitialized = false;
+        System.out.println("[RESET] Data dokter telah direset");
+    }
+    
+    public int getCurrentSize() {
+        return dokterList.size();
+    }
+    
+    public int getLastId() {
+        return lastId;
     }
 }

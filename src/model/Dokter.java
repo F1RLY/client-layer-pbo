@@ -1,3 +1,4 @@
+// File: model/Dokter.java
 package model;
 
 import java.time.LocalDateTime;
@@ -13,24 +14,23 @@ public class Dokter extends BaseEntity {
     // Constructors
     public Dokter() {
         super();
+        this.status = "AKTIF"; // Default status
     }
     
     public Dokter(String kodeDokter, String nama, String spesialisasi) {
-        super();
+        this(); // Panggil default constructor
         this.kodeDokter = kodeDokter;
         this.nama = nama;
         this.spesialisasi = spesialisasi;
-        this.status = "AKTIF";
     }
     
-    // Getters and Setters
+    // Getters and Setters (tanpa update timestamp di setiap setter)
     public String getKodeDokter() {
         return kodeDokter;
     }
     
     public void setKodeDokter(String kodeDokter) {
         this.kodeDokter = kodeDokter;
-        this.updatedAt = LocalDateTime.now();
     }
     
     public String getNama() {
@@ -39,7 +39,6 @@ public class Dokter extends BaseEntity {
     
     public void setNama(String nama) {
         this.nama = nama;
-        this.updatedAt = LocalDateTime.now();
     }
     
     public String getSpesialisasi() {
@@ -48,7 +47,6 @@ public class Dokter extends BaseEntity {
     
     public void setSpesialisasi(String spesialisasi) {
         this.spesialisasi = spesialisasi;
-        this.updatedAt = LocalDateTime.now();
     }
     
     public String getNoTelepon() {
@@ -57,7 +55,6 @@ public class Dokter extends BaseEntity {
     
     public void setNoTelepon(String noTelepon) {
         this.noTelepon = noTelepon;
-        this.updatedAt = LocalDateTime.now();
     }
     
     public String getEmail() {
@@ -66,7 +63,6 @@ public class Dokter extends BaseEntity {
     
     public void setEmail(String email) {
         this.email = email;
-        this.updatedAt = LocalDateTime.now();
     }
     
     public String getStatus() {
@@ -75,12 +71,16 @@ public class Dokter extends BaseEntity {
     
     public void setStatus(String status) {
         this.status = status;
-        this.updatedAt = LocalDateTime.now();
     }
     
     @Override
     public String toString() {
-        return "Dokter [kode=" + kodeDokter + ", nama=" + nama + 
-               ", spesialisasi=" + spesialisasi + "]";
+        return String.format("Dokter[%s] %s - %s", 
+            kodeDokter, nama, spesialisasi);
+    }
+    
+    // Helper method untuk update timestamp manual jika perlu
+    public void markUpdated() {
+        this.updatedAt = LocalDateTime.now();
     }
 }
