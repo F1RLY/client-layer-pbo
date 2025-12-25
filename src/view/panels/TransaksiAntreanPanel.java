@@ -4,17 +4,19 @@ import controller.PatientController;
 import controller.DoctorController;
 import controller.QueueController;
 import model.Pasien;
-import model.Antrean;
+import model.Dokter;
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
 
 public class TransaksiAntreanPanel extends JPanel {
     private PatientController pc;
     private DoctorController dc;
     private QueueController qc;
 
-    private JComboBox<String> cbPasien;
-    private JComboBox<String> cbDokter;
+    // Menggunakan JComboBox objek agar bisa menyimpan ID secara tersembunyi
+    private JComboBox<Pasien> cbPasien;
+    private JComboBox<Dokter> cbDokter;
     private JButton btnDaftar;
 
     public TransaksiAntreanPanel(PatientController pc, DoctorController dc, QueueController qc) {
@@ -32,10 +34,13 @@ public class TransaksiAntreanPanel extends JPanel {
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Komponen Input
+        // Inisialisasi ComboBox dengan tipe Model
         cbPasien = new JComboBox<>();
         cbDokter = new JComboBox<>();
         btnDaftar = new JButton("Daftarkan Antrean");
+        btnDaftar.setFont(new Font("SansSerif", Font.BOLD, 14));
+        btnDaftar.setBackground(new Color(52, 152, 219));
+        btnDaftar.setForeground(Color.WHITE);
 
         // Layouting
         gbc.gridx = 0; gbc.gridy = 0; add(new JLabel("Pilih Pasien:"), gbc);
@@ -51,31 +56,42 @@ public class TransaksiAntreanPanel extends JPanel {
         btnDaftar.addActionListener(e -> prosesPendaftaran());
     }
 
-    private void loadDataToCombo() {
-        // Kosongkan combo dulu sebelum diisi
+    public void loadDataToCombo() {
         cbPasien.removeAllItems();
         cbDokter.removeAllItems();
 
-        // Ambil data Pasien
-        pc.getAllPatients().forEach(p -> cbPasien.addItem(p.getNama()));
+        // Load Pasien
+        List<Pasien> pasiens = pc.getAllPatients();
+        for (Pasien p : pasiens) {
+            cbPasien.addItem(p); // Memasukkan seluruh objek Pasien
+        }
         
-        // Ambil data Dokter
-        dc.getAllDokter().forEach(d -> cbDokter.addItem(d.getNama()));
+        // Load Dokter
+        List<Dokter> dokters = dc.getAllDokter();
+        for (Dokter d : dokters) {
+            cbDokter.addItem(d); // Memasukkan seluruh objek Dokter
+        }
         
-        // Jika data kosong, beri log di terminal
         if(cbPasien.getItemCount() == 0) System.out.println("Warning: Data Pasien Kosong");
     }
 
     private void prosesPendaftaran() {
         try {
-            // PERBAIKAN: Implementasikan pengiriman data ke QueueController
-            String namaPasien = cbPasien.getSelectedItem().toString();
-            String namaDokter = cbDokter.getSelectedItem().toString();
+            // Ambil objek terpilih
+            Pasien pasienTerpilih = (Pasien) cbPasien.getSelectedItem();
+            Dokter dokterTerpilih = (Dokter) cbDokter.getSelectedItem();
             
-            // Buat objek Antrean baru (sesuaikan dengan constructor model Antrean Anda)
-            // qc.createNewQueue(namaPasien, namaDokter); 
+            if (pasienTerpilih == null || dokterTerpilih == null) {
+                JOptionPane.showMessageDialog(this, "Silakan pilih Pasien dan Dokter!");
+                return;
+            }
+
+            // Panggil method addAntrean di QueueController yang sudah kita buat tadi
+            qc.addAntrean(pasienTerpilih, dokterTerpilih);
             
-            JOptionPane.showMessageDialog(this, "Antrean Berhasil Dibuat untuk: " + namaPasien);
+            // Log sukses sederhana (karena pesan sukses sudah ada di Controller)
+            System.out.println("Pendaftaran dikirim untuk ID Pasien: " + pasienTerpilih.getId());
+            
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Gagal: " + e.getMessage());
         }

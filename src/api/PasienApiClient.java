@@ -1,61 +1,94 @@
 package api;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.util.List;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import model.Pasien;
+import model.ApiResponse;
 
 public class PasienApiClient {
-    // Sesuaikan BASE_URL dengan nama folder project Anda di Laragon www
-    private static final String BASE_URL = "http://localhost/realtime-application-tier-php/public/pasien";
-    private final HttpClient client = HttpClient.newHttpClient();
+    // Sesuaikan dengan nama folder project PHP Anda
+    private static final String BASE_URL = "http://localhost/aplication-tier-pbotubes/public/pasien";
     private final Gson gson = new Gson();
 
-    public List<Pasien> findAll() throws Exception {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(BASE_URL))
-                .GET()
-                .build();
-        
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        
-        // Membaca format ApiResponse yang Anda gunakan di tugas sebelumnya
-        ApiResponse<List<Pasien>> apiResp = gson.fromJson(response.body(),
-                new TypeToken<ApiResponse<List<Pasien>>>() {}.getType());
-        
-        if (!apiResp.success) throw new Exception(apiResp.message);
-        return apiResp.data;
-    }
+    // 1. FUNGSI UNTUK MENGAMBIL SEMUA DATA (GET)
+    public List<Pasien> getAllPasien() {
+        try {
+            URL url = new URL(BASE_URL);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
 
-    public void create(Pasien p) throws Exception {
-        String json = gson.toJson(p);
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(BASE_URL))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(json))
-                .build();
-        
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        handleResponse(response);
-    }
-
-    // Helper untuk handle response sesuai standar tugas Anda
-    private void handleResponse(HttpResponse<String> response) throws Exception {
-        if (response.statusCode() < 200 || response.statusCode() >= 300) {
-            throw new RuntimeException("HTTP Error " + response.statusCode());
+            if (conn.getResponseCode() == 200) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                // Parsing JSON menggunakan class wrapper ApiResponse
+                ApiResponse<List<Pasien>> response = gson.fromJson(reader, 
+                    new TypeToken<ApiResponse<List<Pasien>>>(){}.getType());
+                return response.getData();
+            }
+        } catch (Exception e) {
+            System.out.println("Error GET Pasien: " + e.getMessage());
         }
-        ApiResponse<?> apiResp = gson.fromJson(response.body(), ApiResponse.class);
-        if (!apiResp.success) throw new Exception(apiResp.message);
+        return new ArrayList<>();
     }
 
-    // Wrapper JSON agar sinkron dengan Tier-PHP
-    private static class ApiResponse<T> {
-        boolean success;
-        T data;
-        String message;
+    // 2. FUNGSI UNTUK MENAMBAH DATA BARU (POST)
+    public boolean addPasien(Pasien pasien) {
+        try {
+            URL url = new URL(BASE_URL);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setDoOutput(true);
+
+            // Ubah objek Pasien Java menjadi format teks JSON
+            String jsonInputString = gson.toJson(pasien);
+
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonInputString.getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+
+            // Cek apakah server membalas dengan kode 200 (OK)
+            return conn.getResponseCode() == 200;
+        } catch (Exception e) {
+            System.out.println("Error POST Pasien: " + e.getMessage());
+            return false;
+        }
+    }
+
+        public boolean updatePasien(Pasien pasien) {
+        return sendRequest("PUT", pasien);
+    }
+
+    public boolean deletePasien(int id) {
+        // Kita kirim objek pasien yang hanya berisi ID untuk delete
+        Pasien p = new Pasien(id, "", "");
+        return sendRequest("DELETE", p);
+    }
+
+    // Helper method agar kode lebih bersih
+    private boolean sendRequest(String method, Pasien pasien) {
+        try {
+            URL url = new URL(BASE_URL);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod(method);
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setDoOutput(true);
+
+            String json = gson.toJson(pasien);
+            try (OutputStream os = conn.getOutputStream()) {
+                os.write(json.getBytes("utf-8"));
+            }
+            return conn.getResponseCode() == 200;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

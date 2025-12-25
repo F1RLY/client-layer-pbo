@@ -15,4 +15,5 @@ public class Pasien extends BaseEntity {
     
     @Override
     public String toString() { return nama; } // Agar bagus saat tampil di ComboBox
+
 }
