@@ -1,30 +1,18 @@
 package controller;
 
 import model.Antrean;
-import model.Pasien;
-import model.Dokter;
-import java.util.LinkedList;
-import java.util.Queue;
+import api.AntreanApiClient;
 
 public class QueueController {
-    private Queue<Antrean> antreanQueue = new LinkedList<>();
-    private int counter = 1;
+    private final AntreanApiClient apiClient = new AntreanApiClient();
 
-    public String generateNumber() {
-        return String.format("A-%03d", counter++);
-    }
-
-    public void registerAntrean(Pasien p, Dokter d) {
-        String nomor = generateNumber();
-        Antrean antrean = new Antrean(antreanQueue.size() + 1, nomor, p, d);
-        antreanQueue.add(antrean);
-    }
-
-    public Antrean panggilAntreanNext() {
-        return antreanQueue.poll(); // Ambil dan hapus dari antrean (FIFO)
-    }
-
-    public int getTotalAntrean() {
-        return antreanQueue.size();
+    public Antrean getCurrentCalling() {
+        try {
+            return apiClient.fetchCurrentCalling();
+        } catch (Exception e) {
+            // Log error ke konsol untuk mempermudah debug di VS Code
+            System.err.println("Queue Error: " + e.getMessage());
+            return null;
+        }
     }
 }

@@ -3,20 +3,24 @@ import javax.swing.*;
 
 public class MainApp {
     public static void main(String[] args) {
-        // 1. Set Look and Feel agar tampilan modern
+        // Set tema agar tidak kaku (Windows/Mac Style)
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        // 2. Log awal (Opsional untuk debugging)
-        System.out.println("Starting SMARS v1.0...");
+        System.out.println("Starting SMARS App...");
 
-        // 3. Menjalankan MainFrame
+        // Jalankan UI
         SwingUtilities.invokeLater(() -> {
-            MainFrame app = new MainFrame();
-            app.setVisible(true);
+            try {
+                MainFrame frame = new MainFrame();
+                frame.setVisible(true);
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(null, "Error Launching App: " + e.getMessage());
+                e.printStackTrace();
+            }
         });
     }
 }

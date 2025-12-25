@@ -1,115 +1,42 @@
-// File: worker/BaseWorker.java
 package worker;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Logger;
+import javax.swing.*;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 
 /**
- * Abstract class dasar untuk semua worker
+ * Ini adalah template kurir (Worker) untuk mengambil data apapun secara background.
+ * T adalah tipe data yang mau diambil (misal Pasien atau Dokter).
  */
-public abstract class BaseWorker implements Runnable {
-    protected static final Logger logger = Logger.getLogger(BaseWorker.class.getName());
+public class BaseWorker<T> extends SwingWorker<List<T>, Void> {
     
-    protected final String workerName;
-    protected WorkerStatus status;
-    protected final AtomicBoolean running;
-    protected Thread workerThread;
-    protected int intervalMs;
-    
-    public BaseWorker(String workerName, int intervalMs) {
-        this.workerName = workerName;
-        this.intervalMs = intervalMs;
-        this.running = new AtomicBoolean(false);
-        this.status = WorkerStatus.STOPPED;
+    private final Callable<List<T>> fetchTask;   // Tugas yang akan dijalankan
+    private final Consumer<List<T>> onSuccess;    // Apa yang dilakukan jika berhasil
+    private final Consumer<Exception> onFailure;  // Apa yang dilakukan jika gagal
+
+    public BaseWorker(Callable<List<T>> fetchTask, 
+                      Consumer<List<T>> onSuccess, 
+                      Consumer<Exception> onFailure) {
+        this.fetchTask = fetchTask;
+        this.onSuccess = onSuccess;
+        this.onFailure = onFailure;
     }
-    
+
     @Override
-    public void run() {
-        logger.info("Worker '" + workerName + "' started");
-        status = WorkerStatus.RUNNING;
-        
+    protected List<T> doInBackground() throws Exception {
+        // Bagian ini berjalan di "belakang layar" (tidak membuat aplikasi macet)
+        return fetchTask.call();
+    }
+
+    @Override
+    protected void done() {
         try {
-            while (running.get()) {
-                try {
-                    performTask();
-                } catch (Exception e) {
-                    logger.severe("Error in worker '" + workerName + "': " + e.getMessage());
-                    status = WorkerStatus.ERROR;
-                    break;
-                }
-                
-                if (intervalMs > 0) {
-                    Thread.sleep(intervalMs);
-                }
-            }
-        } catch (InterruptedException e) {
-            logger.info("Worker '" + workerName + "' interrupted");
-            Thread.currentThread().interrupt();
-        } finally {
-            status = WorkerStatus.STOPPED;
-            logger.info("Worker '" + workerName + "' stopped");
+            // Bagian ini berjalan kembali di "tampilan depan" (UI) setelah data didapat
+            List<T> result = get();
+            onSuccess.accept(result);
+        } catch (Exception e) {
+            onFailure.accept(e);
         }
-    }
-    
-    // Abstract method untuk diimplementasikan subclass
-    protected abstract void performTask() throws Exception;
-    
-    // Start worker
-    public synchronized void start() {
-        if (!running.get()) {
-            running.set(true);
-            workerThread = new Thread(this, workerName + "-Thread");
-            workerThread.setDaemon(true); // Thread daemon (berhenti jika app exit)
-            workerThread.start();
-            logger.info("Worker '" + workerName + "' started");
-        }
-    }
-    
-    // Stop worker
-    public synchronized void stop() {
-        if (running.get()) {
-            running.set(false);
-            if (workerThread != null) {
-                workerThread.interrupt();
-            }
-            logger.info("Worker '" + workerName + "' stopping...");
-        }
-    }
-    
-    // Pause worker
-    public synchronized void pause() {
-        if (running.get() && status == WorkerStatus.RUNNING) {
-            status = WorkerStatus.PAUSED;
-            logger.info("Worker '" + workerName + "' paused");
-        }
-    }
-    
-    // Resume worker
-    public synchronized void resume() {
-        if (running.get() && status == WorkerStatus.PAUSED) {
-            status = WorkerStatus.RUNNING;
-            logger.info("Worker '" + workerName + "' resumed");
-        }
-    }
-    
-    // Getters
-    public String getWorkerName() {
-        return workerName;
-    }
-    
-    public WorkerStatus getStatus() {
-        return status;
-    }
-    
-    public boolean isRunning() {
-        return running.get();
-    }
-    
-    public int getIntervalMs() {
-        return intervalMs;
-    }
-    
-    public void setIntervalMs(int intervalMs) {
-        this.intervalMs = intervalMs;
     }
 }

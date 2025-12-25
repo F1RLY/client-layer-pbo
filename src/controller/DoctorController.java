@@ -1,18 +1,19 @@
 package controller;
 
+import api.DoctorApiClient;
 import model.Dokter;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DoctorController {
-    private List<Dokter> dokterList = new ArrayList<>();
-
-    public void addDokter(String nama, String spesialis) {
-        int id = dokterList.size() + 1;
-        dokterList.add(new Dokter(id, nama, spesialis));
-    }
+    private final DoctorApiClient apiClient = new DoctorApiClient();
 
     public List<Dokter> getAllDokter() {
-        return dokterList;
+        try {
+            return apiClient.findAll();
+        } catch (Exception e) {
+            System.err.println("Error DoctorController: " + e.getMessage());
+            return new ArrayList<>(); // Kembalikan list kosong jika gagal
+        }
     }
 }

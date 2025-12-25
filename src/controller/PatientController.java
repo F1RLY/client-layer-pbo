@@ -1,24 +1,23 @@
 package controller;
 
+import api.PasienApiClient;
 import model.Pasien;
 import java.util.ArrayList;
 import java.util.List;
 
 public class PatientController {
-    private List<Pasien> pasienList = new ArrayList<>();
+    private final PasienApiClient apiClient = new PasienApiClient();
 
-    public void addPasien(String nama, String nik) {
-        int id = pasienList.size() + 1;
-        pasienList.add(new Pasien(id, nama, nik));
-    }
-
-    public List<Pasien> getAllPasien() {
-        return pasienList;
-    }
-
-    public void deletePasien(int index) {
-        if (index >= 0 && index < pasienList.size()) {
-            pasienList.remove(index);
+    public List<Pasien> getAllPatients() {
+        try {
+            return apiClient.findAll();
+        } catch (Exception e) {
+            System.err.println("Error PatientController: " + e.getMessage());
+            return new ArrayList<>(); // Kembalikan list kosong jika gagal
         }
+    }
+    
+    public void addPatient(Pasien p) throws Exception {
+        apiClient.create(p);
     }
 }
