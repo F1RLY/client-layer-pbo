@@ -36,25 +36,27 @@ public class MainFrame extends JFrame {
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
 
-        Header header = new Header();
-        SideBar sideBar = new SideBar(target -> cardLayout.show(cardPanel, target));
+        // Update Dashboard supaya bisa deteksi AKSI_PANGGIL
+        cardPanel.add(new DashboardPanel(target -> {
+            if (target.equals("AKSI_PANGGIL")) {
+                queueController.panggilBerikutnya(); // Menjalankan perintah ke API
+            } else {
+                cardLayout.show(cardPanel, target);
+            }
+        }), "DASHBOARD");
 
-        // Daftarkan semua Panel ke CardLayout
-        cardPanel.add(new DashboardPanel(target -> cardLayout.show(cardPanel, target)), "DASHBOARD");
+        // Panel lainnya tetap sama...
         cardPanel.add(new MasterDataPanel("PASIEN", patientController), "PASIEN");
         cardPanel.add(new MasterDataPanel("DOKTER", doctorController), "DOKTER");
         cardPanel.add(new TransaksiAntreanPanel(patientController, doctorController, queueController), "TRANSAKSI");
-        
-        // Simpan ke variabel class agar bisa diakses initWebSocket
         this.monitorPanel = new MonitorPanel(queueController);
         cardPanel.add(monitorPanel, "MONITOR");
 
-        setLayout(new BorderLayout());
-        add(header, BorderLayout.NORTH);
-        add(sideBar, BorderLayout.WEST);
+        // Layouting...
+        add(new view.components.Header(), BorderLayout.NORTH);
+        add(new view.components.SideBar(target -> cardLayout.show(cardPanel, target)), BorderLayout.WEST);
         add(cardPanel, BorderLayout.CENTER);
     }
-
     private void initWebSocket() {
         try {
             // Ganti port 8080 jika server WebSocket PHP Anda menggunakan port berbeda

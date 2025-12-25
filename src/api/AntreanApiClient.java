@@ -6,13 +6,12 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Scanner;
 import model.Antrean;
-import model.ApiResponse;
 
 public class AntreanApiClient {
     private static final String BASE_URL = "http://localhost/aplication-tier-pbotubes/public/antrean";
     private final Gson gson = new Gson();
 
-    // Untuk POST (Simpan)
+    // Simpan Antrean Baru
     public boolean saveAntrean(int pasienId, int dokterId) {
         try {
             URL url = new URL(BASE_URL);
@@ -28,26 +27,39 @@ public class AntreanApiClient {
             }
             return conn.getResponseCode() == 200;
         } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+        public boolean updateStatusNext() {
+        try {
+            // Memanggil endpoint http://localhost/.../public/antrean/next
+            URL url = new URL(BASE_URL + "/next"); 
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            return conn.getResponseCode() == 200;
+        } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
     }
 
-    // Untuk GET (Ambil yang sedang dipanggil)
     public Antrean fetchCurrentCalling() {
         try {
-            URL url = new URL(BASE_URL); // Tambahkan endpoint spesifik jika ada, misal /current
+            URL url = new URL(BASE_URL + "/current");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
 
             if (conn.getResponseCode() == 200) {
-                Scanner sc = new Scanner(conn.getInputStream());
+                java.util.Scanner sc = new java.util.Scanner(conn.getInputStream());
                 String response = sc.useDelimiter("\\A").next();
                 sc.close();
-                // Parsing logic tergantung struktur JSON ApiResponse Anda
+                // GSON otomatis memetakan JSON ke model Antrean kita tadi
                 return gson.fromJson(response, Antrean.class); 
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Gagal ambil data monitor: " + e.getMessage());
         }
         return null;
     }

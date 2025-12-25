@@ -1,27 +1,23 @@
 package model;
 
+import com.google.gson.annotations.SerializedName;
 import model.Enums.StatusAntrean;
 
 public class Antrean extends BaseEntity {
     private String nomor;
-    private Pasien pasien;
-    private Dokter dokter;
+    
+    @SerializedName("p_nama") // Menangkap alias dari SQL PHP
+    private String namaPasien;
+    
+    @SerializedName("d_nama") // Menangkap alias dari SQL PHP
+    private String namaDokter;
+    
     private StatusAntrean status;
 
-    public Antrean(Integer id, String nomor, Pasien pasien, Dokter dokter) {
-        this.id = id;
-        this.nomor = nomor;
-        this.pasien = pasien;
-        this.dokter = dokter;
-        this.status = StatusAntrean.MENUNGGU; // Default saat dibuat
-    }
+    public Antrean() {} 
 
-    // Getters
     public String getNomor() { return nomor; }
-    public Pasien getPasien() { return pasien; }
-    public Dokter getDokter() { return dokter; }
+    public String getNamaPasien() { return namaPasien; }
+    public String getNamaDokter() { return namaDokter; }
     public StatusAntrean getStatus() { return status; }
-
-    // Setters
-    public void setStatus(StatusAntrean status) { this.status = status; }
 }
